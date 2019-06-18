@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -57,12 +58,12 @@ var upgrader = &websocket.Upgrader{ReadBufferSize: socketBufferSize, WriteBuffer
 func (h *hub) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	id := req.URL.Query().Get("id")
 	_, ok := h.rooms[id]
-	fmt.Printf("%+v\n", h.rooms)
 	if !ok {
 		new := newRoom(id)
 		go h.run(id)
 		h.rooms[new.id] = new
 	}
+	fmt.Printf("%+v\n", h.rooms)
 	upgrader.CheckOrigin = func(req *http.Request) bool {
 		return true
 	}
@@ -80,4 +81,18 @@ func (h *hub) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	defer func() { h.rooms[id].leave <- client }()
 	go client.write()
 	client.read()
+}
+
+type RoomList struct {
+	Rooms []string `json:"rooms"`
+}
+
+func (h *hub) GetRoomList(w http.ResponseWriter, req *http.Request) {
+	keys := make([]string, 0, len(h.rooms))
+	for roomID := range h.rooms {
+		keys = append(keys, roomID)
+	}
+	json.NewEncoder(w).Encode(RoomList{
+		Rooms: keys,
+	})
 }
