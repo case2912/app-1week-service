@@ -60,10 +60,8 @@ func (h *hub) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	id := req.URL.Query().Get("id")
 	_, ok := h.rooms[id]
 	if !ok {
-		id = uuid.NewV4().String()
-		new := newRoom(id)
-		go h.run(id)
-		h.rooms[new.id] = new
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
 	}
 	fmt.Printf("%+v\n", h.rooms)
 	upgrader.CheckOrigin = func(req *http.Request) bool {
@@ -80,9 +78,30 @@ func (h *hub) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		room:   h.rooms[id],
 	}
 	h.rooms[id].join <- client
-	defer func() { h.rooms[id].leave <- client }()
+	defer func() {
+		h.rooms[id].leave <- client
+		if len(h.rooms[id].clients) == 0 {
+			delete(h.rooms, id)
+		}
+	}()
 	go client.write()
 	client.read()
+}
+
+type Room struct {
+	RoomID string `json:"room_id"`
+}
+
+func (h *hub) CreateRoom(w http.ResponseWriter, req *http.Request) {
+	id := uuid.NewV4().String()
+	new := newRoom(id)
+	h.rooms[new.id] = new
+	go h.run(id)
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	json.NewEncoder(w).Encode(Room{
+		RoomID: id,
+	})
 }
 
 type RoomList struct {
@@ -94,6 +113,8 @@ func (h *hub) GetRoomList(w http.ResponseWriter, req *http.Request) {
 	for roomID := range h.rooms {
 		keys = append(keys, roomID)
 	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	json.NewEncoder(w).Encode(RoomList{
 		Rooms: keys,
 	})
