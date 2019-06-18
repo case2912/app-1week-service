@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gollira/websocket"
+	uuid "github.com/satori/go.uuid"
 )
 
 type hub struct {
@@ -59,6 +60,7 @@ func (h *hub) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	id := req.URL.Query().Get("id")
 	_, ok := h.rooms[id]
 	if !ok {
+		id = uuid.NewV4().String()
 		new := newRoom(id)
 		go h.run(id)
 		h.rooms[new.id] = new
