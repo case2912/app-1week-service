@@ -1,0 +1,4 @@
+github.com/gollira/websocket v1.4.0 h1:JRD0/G1zW+K0Zz7qefiFZ+OFj+mXDdV1pHfncwvO44w=
+github.com/gollira/websocket v1.4.0/go.mod h1:bhg/Iw8cCpiF4az24eGSpaX+0DoUa4I2tqEA7IdxUAI=
+github.com/gorilla/websocket v1.4.0 h1:WDFjx/TMzVgy9VdMMQi2K2Emtwi2QcUQsztZ/zLaH/Q=
+github.com/gorilla/websocket v1.4.0/go.mod h1:E7qHFY5m1UJ88s3WnNqhKjPHQ0heANvMoAMk2YaljkQ=
