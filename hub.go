@@ -33,6 +33,7 @@ func (h *hub) run(id string) {
 			delete(r.clients, client)
 			close(client.send)
 			if len(r.clients) == 0 {
+				fmt.Println("room deleted")
 				delete(h.rooms, r.id)
 			}
 		case msg := <-r.forward:
@@ -80,9 +81,6 @@ func (h *hub) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	h.rooms[id].join <- client
 	defer func() {
 		h.rooms[id].leave <- client
-		if len(h.rooms[id].clients) == 0 {
-			delete(h.rooms, id)
-		}
 	}()
 	go client.write()
 	client.read()
@@ -99,6 +97,7 @@ func (h *hub) CreateRoom(w http.ResponseWriter, req *http.Request) {
 	go h.run(id)
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	fmt.Printf("%+v\n", h.rooms)
 	json.NewEncoder(w).Encode(Room{
 		RoomID: id,
 	})
@@ -115,6 +114,7 @@ func (h *hub) GetRoomList(w http.ResponseWriter, req *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	fmt.Printf("%+v\n", h.rooms)
 	json.NewEncoder(w).Encode(RoomList{
 		Rooms: keys,
 	})
