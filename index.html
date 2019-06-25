@@ -11,16 +11,7 @@
     <div id="container"></div>
 
     <script type="text/javascript">
-      var socket = new WebSocket('ws://localhost:8080/room?id=121');
-      socket.addEventListener('message', e => {
-        var p = document.createElement('p');
-        p.innerHTML = JSON.parse(e.data).message;
-        var container = document.querySelector('#container');
-        container.appendChild(p);
-      });
-      function testclick() {
-        socket.send(JSON.stringify({ message: performance.now().toString() }));
-      }
+      fetch('http://127.0.0.1:8080/room/create', { mode: 'cors' });
     </script>
   </body>
 </html>
