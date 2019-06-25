@@ -26,18 +26,18 @@ func (h *hub) run(id string) {
 	for {
 		select {
 		case client := <-r.join:
-			fmt.Println("client joined")
+			fmt.Printf("client joined ROOM:%s\n", id)
 			r.clients[client] = true
 		case client := <-r.leave:
 			fmt.Println("client left")
 			delete(r.clients, client)
 			close(client.send)
 			if len(r.clients) == 0 {
-				fmt.Println("room deleted")
+				fmt.Printf("room deleted ROOM:%s\n", id)
 				delete(h.rooms, r.id)
 			}
 		case msg := <-r.forward:
-			fmt.Println("client forward message")
+			fmt.Printf("client forward message %+v\n", msg)
 			for client := range r.clients {
 				select {
 				case client.send <- msg:
@@ -64,7 +64,6 @@ func (h *hub) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	fmt.Printf("%+v\n", h.rooms)
 	upgrader.CheckOrigin = func(req *http.Request) bool {
 		return true
 	}
@@ -97,7 +96,7 @@ func (h *hub) CreateRoom(w http.ResponseWriter, req *http.Request) {
 	go h.run(id)
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	fmt.Printf("%+v\n", h.rooms)
+	fmt.Println("request create room")
 	json.NewEncoder(w).Encode(Room{
 		RoomID: id,
 	})
@@ -114,7 +113,7 @@ func (h *hub) GetRoomList(w http.ResponseWriter, req *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	fmt.Printf("%+v\n", h.rooms)
+	fmt.Println("request get room list")
 	json.NewEncoder(w).Encode(RoomList{
 		Rooms: keys,
 	})
