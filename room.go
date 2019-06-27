@@ -6,6 +6,7 @@ type room struct {
 	join    chan *client
 	leave   chan *client
 	clients map[*client]bool
+	renga   []*Message
 }
 
 func newRoom(id string) *room {
@@ -15,5 +16,6 @@ func newRoom(id string) *room {
 		join:    make(chan *client),
 		leave:   make(chan *client),
 		clients: make(map[*client]bool),
+		renga:   []*Message{},
 	}
 }

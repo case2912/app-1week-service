@@ -38,6 +38,11 @@ func (h *hub) run(id string) {
 			}
 		case msg := <-r.forward:
 			fmt.Printf("client forward message %+v\n", msg)
+			if msg.MessageType == "Haiku" {
+				r.renga = append(r.renga, msg)
+			}
+
+			fmt.Printf("renga %+v\n", r.renga)
 			for client := range r.clients {
 				select {
 				case client.send <- msg:
@@ -78,8 +83,19 @@ func (h *hub) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		room:   h.rooms[id],
 	}
 	h.rooms[id].join <- client
+	h.rooms[id].forward <- &Message{
+		Message:     "client joined",
+		MessageType: "Comment",
+	}
+	for _, msg := range h.rooms[id].renga {
+		client.socket.WriteJSON(msg)
+	}
 	defer func() {
 		h.rooms[id].leave <- client
+		h.rooms[id].forward <- &Message{
+			Message:     "client left",
+			MessageType: "Comment",
+		}
 	}()
 	go client.write()
 	client.read()
